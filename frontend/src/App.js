@@ -1,0 +1,265 @@
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate, Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './App.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+
+// Auth Context
+const AuthContext = createContext();
+
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
+
+// Auth Provider
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/me`);
+      setUser(response.data.user);
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const login = (token, user) => {
+    localStorage.setItem('token', token);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    setToken(token);
+    setUser(user);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    setToken(null);
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Login Component with Navigation
+const LoginForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password
+      });
+      login(response.data.token, response.data.user);
+      navigate('/dashboard');
+    } catch (error) {
+      setError(error.response?.data?.error || 'Login failed');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <h2>Login</h2>
+        {error && <div className="error">{error}</div>}
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+        <p>
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
+      </form>
+    </div>
+  );
+};
+
+// Register Component with Navigation
+const RegisterForm = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        email,
+        password
+      });
+      setSuccess('Registration successful!');
+      login(response.data.token, response.data.user);
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    } catch (error) {
+      setError(error.response?.data?.error || 'Registration failed');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-container">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <h2>Register</h2>
+        {error && <div className="error">{error}</div>}
+        {success && <div className="success">{success}</div>}
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
+        </button>
+        <p>
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </form>
+    </div>
+  );
+};
+
+// Dashboard Component
+const Dashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="dashboard">
+      <h1>Welcome to your Dashboard!</h1>
+      <div className="user-info">
+        <p>Email: {user?.email}</p>
+        <p>Verified: {user?.verified ? 'Yes' : 'No'}</p>
+        <p>Member since: {new Date(user?.created_at).toLocaleDateString()}</p>
+      </div>
+      <button onClick={handleLogout} className="logout-btn">Logout</button>
+    </div>
+  );
+};
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  return user ? children : <Navigate to="/login" />;
+};
+
+// Main App Component
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
