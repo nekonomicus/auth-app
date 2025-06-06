@@ -1,0 +1,44 @@
+services:
+  # Backend service
+  - type: web
+    name: auth-app-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: auth-app-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://your-frontend-url.onrender.com # Update this after frontend deployment
+    healthCheckPath: /api/health
+
+  # Frontend service
+  - type: web
+    name: auth-app-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://your-backend-url.onrender.com/api # Update this after backend deployment
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+# Database
+databases:
+  - name: auth-app-db
+    plan: starter # or 'standard' for production
+    region: oregon # or your preferred region
