@@ -90,6 +90,10 @@ function generateVerificationToken() {
 }
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ status: 'OK', message: 'Auth API Server' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });
 });
