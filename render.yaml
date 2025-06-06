@@ -28,7 +28,7 @@ services:
     staticPublishPath: ./build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://auth-app-backend-s9hs.onrender.com/api
+        value: https://auth-app-backend-d920.onrender.com/api
     headers:
       - path: /*
         name: X-Frame-Options
