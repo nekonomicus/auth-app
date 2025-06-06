@@ -215,10 +215,131 @@ const RegisterForm = () => {
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatResponse, setChatResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const rodentifyText = (text) => {
+    // Transform text to rodent speak
+    const rodentWords = {
+      'hello': '*quietscht* Hallo',
+      'yes': '*nick nick* Ja ja',
+      'no': '*schüttel* Nein nein',
+      'good': 'super-duper-muckel-gut',
+      'bad': 'nicht so muckel-mäßig',
+      'food': 'Körner und Nüsschen',
+      'eat': 'mümmeln',
+      'run': 'im Laufrad rennen',
+      'sleep': 'im Nest kuscheln',
+      'friend': 'Muckel-Kumpel',
+      'love': '❤️ muckel-lieb haben ❤️',
+      'happy': '🐹 quietsch-fröhlich 🐹',
+      'thank': '*verbeug* Muckel-Danke',
+      'you': 'du süßer Muckel',
+      'I': 'ich kleiner Hamster',
+      'the': 'das',
+      'is': 'ist total',
+      'are': 'sind sowas von',
+      'what': '*neugierig schnüffel* Was',
+      'how': '*Köpfchen schief leg* Wie',
+      'why': '*verwirrt quietsch* Warum'
+    };
+
+    let result = text;
+    
+    // Add random squeaks and rodent sounds
+    const sounds = ['*quietsch*', '*schnüffel*', '*müffel*', '*knabber*', '*fiep*'];
+    const randomSound = () => sounds[Math.floor(Math.random() * sounds.length)];
+    
+    // Replace words with rodent versions
+    Object.entries(rodentWords).forEach(([normal, rodent]) => {
+      const regex = new RegExp(`\\b${normal}\\b`, 'gi');
+      result = result.replace(regex, rodent);
+    });
+    
+    // Add random sounds between sentences
+    result = result.replace(/\./g, `. ${randomSound()}`);
+    result = result.replace(/\?/g, `? ${randomSound()}`);
+    result = result.replace(/!/g, `! ${randomSound()}`);
+    
+    // Add ending
+    const endings = [
+      '*putzt sich das Fell*',
+      '*versteckt Nüsschen*',
+      '*rennt ins Laufrad*',
+      '*knabbert zufrieden*',
+      '*macht Männchen*'
+    ];
+    
+    result = `${randomSound()} ${result} ${endings[Math.floor(Math.random() * endings.length)]}`;
+    
+    return result;
+  };
+
+  const handleChat = async (e) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+    
+    setIsLoading(true);
+    setChatResponse('');
+    
+    try {
+      // Using a simple approach - generate a fun response based on keywords
+      const lowerMessage = chatMessage.toLowerCase();
+      let response = '';
+      
+      if (lowerMessage.includes('wetter') || lowerMessage.includes('weather')) {
+        response = "Das Wetter ist perfekt zum Körnchen sammeln! Die Sonne scheint warm auf mein Fell.";
+      } else if (lowerMessage.includes('essen') || lowerMessage.includes('food') || lowerMessage.includes('hunger')) {
+        response = "Ohhh, Essen! Ich liebe Sonnenblumenkerne, Möhrchen und frisches Grünzeug! Was ist dein Lieblings-Knabberzeug?";
+      } else if (lowerMessage.includes('liebe') || lowerMessage.includes('love')) {
+        response = "Liebe ist wenn man seine Lieblings-Nüsschen teilt! Ich hab dich auch lieb, Muckel-Freund!";
+      } else if (lowerMessage.includes('sport') || lowerMessage.includes('lauf')) {
+        response = "Ich renne jede Nacht 5 Kilometer in meinem Laufrad! Das hält fit und macht Spaß!";
+      } else if (lowerMessage.includes('müde') || lowerMessage.includes('tired') || lowerMessage.includes('schlaf')) {
+        response = "Zeit für ein Nickerchen im kuscheligen Nest! Hamster brauchen 14 Stunden Schlaf am Tag!";
+      } else if (lowerMessage.includes('wie geht') || lowerMessage.includes('how are')) {
+        response = "Mir geht's hammster-mäßig gut! Meine Backen sind voll und mein Fell ist flauschig!";
+      } else {
+        const genericResponses = [
+          "Das ist ja interessant! Erzähl mir mehr davon während ich diese Nuss knabbere!",
+          "Ui ui ui, das klingt spannend! Ich verstecke das mal in meinen Backentaschen zum später drüber nachdenken!",
+          "Weißt du was? Du bist ein ganz toller Muckel! Lass uns Freunde sein!",
+          "Ich bin zwar nur ein kleiner Hamster, aber ich höre dir gerne zu!",
+          "Das erinnert mich an die Zeit, als ich mein erstes Sonnenblumenkernchen gefunden habe!"
+        ];
+        response = genericResponses[Math.floor(Math.random() * genericResponses.length)];
+      }
+      
+      // Apply rodent language transformation
+      const rodentResponse = rodentifyText(response);
+      
+      // Simulate typing effect
+      let index = 0;
+      const typeWriter = () => {
+        if (index < rodentResponse.length) {
+          setChatResponse(prev => prev + rodentResponse[index]);
+          index++;
+          setTimeout(typeWriter, 30);
+        }
+      };
+      
+      setTimeout(() => {
+        setChatResponse('');
+        typeWriter();
+        setChatMessage(''); // Clear input after sending
+      }, 500);
+      
+    } catch (error) {
+      setChatResponse('*verschüchtert quietsch* Oh nein, da ist was schief gelaufen! *versteckt sich*');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -257,6 +378,31 @@ const Dashboard = () => {
         <p>📧 Email: {user?.email}</p>
         <p>✅ Verifiziert: {user?.verified ? 'Ja' : 'Nein'}</p>
         <p>📅 Muckel seit: {new Date(user?.created_at).toLocaleDateString('de-DE')}</p>
+      </div>
+
+      <div className="muckel-chat">
+        <h3>🐹 Muckel-Chat - Frag mich was!</h3>
+        <form onSubmit={handleChat} className="chat-form">
+          <input
+            type="text"
+            value={chatMessage}
+            onChange={(e) => setChatMessage(e.target.value)}
+            placeholder="Stell dem Muckel eine Frage..."
+            disabled={isLoading}
+            className="chat-input"
+          />
+          <button type="submit" disabled={isLoading} className="chat-button">
+            {isLoading ? '🐹 *denkt nach*...' : '📨 Fragen'}
+          </button>
+        </form>
+        {chatResponse && (
+          <div className="chat-response">
+            <div className="chat-bubble">
+              <span className="chat-avatar">🐹</span>
+              <p className="chat-text">{chatResponse}</p>
+            </div>
+          </div>
+        )}
       </div>
       
       <button onClick={handleLogout} className="logout-btn">Tschüss sagen</button>
