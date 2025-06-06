@@ -16,7 +16,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        value: https://your-frontend-url.onrender.com # Update this after frontend deployment
+        value: https://auth-app-frontend-qn2r.onrender.com
     healthCheckPath: /api/health
 
   # Frontend service
@@ -28,7 +28,7 @@ services:
     staticPublishPath: ./build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://your-backend-url.onrender.com/api # Update this after backend deployment
+        value: https://auth-app-backend-s9hs.onrender.com/api
     headers:
       - path: /*
         name: X-Frame-Options
