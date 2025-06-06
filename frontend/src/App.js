@@ -94,7 +94,11 @@ const LoginForm = () => {
   return (
     <div className="auth-container">
       <form onSubmit={handleSubmit} className="auth-form">
-        <h2>Login</h2>
+        <div className="form-header">
+          <h1 className="form-title">Muckeltreff.de</h1>
+          <p className="form-tagline">🐹 Willkommen zurück!</p>
+        </div>
+        <h2>Anmelden</h2>
         {error && <div className="error">{error}</div>}
         <input
           type="email"
@@ -168,7 +172,11 @@ const RegisterForm = () => {
   return (
     <div className="auth-container">
       <form onSubmit={handleSubmit} className="auth-form">
-        <h2>Register</h2>
+        <div className="form-header">
+          <h1 className="form-title">Muckeltreff.de</h1>
+          <p className="form-tagline">🐹 Werde ein Muckel!</p>
+        </div>
+        <h2>Registrieren</h2>
         {error && <div className="error">{error}</div>}
         {success && <div className="success">{success}</div>}
         <input
@@ -215,13 +223,43 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <h1>Welcome to your Dashboard!</h1>
-      <div className="user-info">
-        <p>Email: {user?.email}</p>
-        <p>Verified: {user?.verified ? 'Yes' : 'No'}</p>
-        <p>Member since: {new Date(user?.created_at).toLocaleDateString()}</p>
+      <div className="site-header">
+        <h1 className="site-title">Muckeltreff.de</h1>
+        <p className="site-tagline">Der gemütlichste Treffpunkt im Netz!</p>
       </div>
-      <button onClick={handleLogout} className="logout-btn">Logout</button>
+      
+      <div className="hamster-container">
+        <div className="hamster">
+          <div className="hamster-body">
+            <div className="hamster-ear left"></div>
+            <div className="hamster-ear right"></div>
+            <div className="hamster-eye left"></div>
+            <div className="hamster-eye right"></div>
+            <div className="hamster-nose"></div>
+            <div className="hamster-mouth"></div>
+            <div className="hamster-whisker left"></div>
+            <div className="hamster-whisker right"></div>
+          </div>
+          <div className="hamster-wheel">
+            <div className="wheel-spoke"></div>
+            <div className="wheel-spoke"></div>
+            <div className="wheel-spoke"></div>
+            <div className="wheel-spoke"></div>
+          </div>
+        </div>
+        <div className="welcome-message">
+          <h2>Willkommen, {user?.email?.split('@')[0]}! 🐹</h2>
+        </div>
+      </div>
+
+      <div className="user-info">
+        <h3>Dein Muckel-Profil:</h3>
+        <p>📧 Email: {user?.email}</p>
+        <p>✅ Verifiziert: {user?.verified ? 'Ja' : 'Nein'}</p>
+        <p>📅 Muckel seit: {new Date(user?.created_at).toLocaleDateString('de-DE')}</p>
+      </div>
+      
+      <button onClick={handleLogout} className="logout-btn">Tschüss sagen</button>
     </div>
   );
 };
