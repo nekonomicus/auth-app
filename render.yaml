@@ -40,5 +40,5 @@ services:
 # Database
 databases:
   - name: auth-app-db
-    plan: starter # or 'standard' for production
+    plan: free # Use 'standard' for production
     region: oregon # or your preferred region
